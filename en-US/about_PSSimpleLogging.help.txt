@@ -1,0 +1,27 @@
+SYNOPSIS
+  A PowerShell logging module.
+
+DESCRIPTION
+  Creates new logs at specified time intervals and writes logging information to them.
+
+  For more information, see the Initialize-Log function's help.
+
+OUTPUTS
+  Log file to <'Directory'\'BaseName'>
+
+EXAMPLES
+  Initialize-Log -Directory $PSScriptRoot -BaseName "MyLog" -Rollover "Minute" -MaxCount 30
+
+  Write-LogHost "This is some text to display and log."
+
+  Write-LogHost "This is some text to display (in green!) and log." -ForegroundColor Green
+
+  Write-LogDebug "This is some debug information to display and log, as long as $DebugPreference is not set to 'SilentlyContinue'."
+
+  Write-LogVerbose "This is some verbose information to display and log, as long as $VerbosePreference is not set to 'SilentlyContinue'."
+
+  Write-LogInformation "This is some information to display and log, as long as $InformationPreference is not set to 'SilentlyContinue'."
+
+  Write-LogWarning "This is a warning to throw (and display to the console) and log, as long as $WarningPreference is not set to 'SilentlyContinue'."
+
+  Write-LogError "This is an error to throw (and display to the console) and log, as long as $ErrorActionPreference is not set to 'SilentlyContinue'."
