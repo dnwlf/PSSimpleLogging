@@ -68,7 +68,7 @@ function Initialize-Log()
     "Month"
     {
       $DateFormat = "yyyyMM"
-      $env:PSSimpleLogExpires = ((Get-Date -Day 01 -Hour 00 -Minute 00 -Second 00 -Millisecond 00).AddMonths(1))
+      $env:PSSimpleLogExpires = ((Get-Date -Day 01 -Hour 00 -Minute 00 -Second 00 -Millisecond 00).AddMonths(1).ToUniversalTime().ToString('o'))
     }
 
     "Week"
@@ -77,25 +77,25 @@ function Initialize-Log()
 
       $Week = Get-Date
       While($Week.DayOfWeek -ne "Sunday"){$Week = $Week.AddDays(1)}
-      $env:PSSimpleLogExpires = ($Week).Date
+      $env:PSSimpleLogExpires = ($Week).Date.ToUniversalTime().ToString('o')
     }
 
     "Day"
     {
       $DateFormat = "yyyyMMdd"
-      $env:PSSimpleLogExpires = ((Get-Date -Hour 00 -Minute 00 -Second 00 -Millisecond 00).AddDays(1))
+      $env:PSSimpleLogExpires = ((Get-Date -Hour 00 -Minute 00 -Second 00 -Millisecond 00).AddDays(1).ToUniversalTime().ToString('o'))
     }
 
     "Hour"
     {
       $DateFormat = "yyyyMMdd.HH"
-      $env:PSSimpleLogExpires = ((Get-Date -Minute 00 -Second 00 -Millisecond 00).AddHours(1))
+      $env:PSSimpleLogExpires = ((Get-Date -Minute 00 -Second 00 -Millisecond 00).AddHours(1).ToUniversalTime().ToString('o'))
     }
 
     "Minute"
     {
       $DateFormat = "yyyyMMdd.HHmm"
-      $env:PSSimpleLogExpires = ((Get-Date -Second 00 -Millisecond 00).AddMinutes(1))
+      $env:PSSimpleLogExpires = ((Get-Date -Second 00 -Millisecond 00).AddMinutes(1).ToUniversalTime().ToString('o'))
     }
   }
 
@@ -173,7 +173,7 @@ function Write-LogHost()
     [string]$ForegroundColor
   )
 
-  [bool]$Expired = (Get-Date) -gt $env:PSSimpleLogExpires
+  [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
 
   if($Expired -or (-not $env:PSSimpleLogLogfile))
   {
@@ -234,7 +234,7 @@ function Write-LogDebug()
 
   if($DebugPreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date) -gt $env:PSSimpleLogExpires
+    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
     if($Expired -or (-not $env:PSSimpleLogLogfile))
     {
       Initialize-Log
@@ -288,7 +288,7 @@ function Write-LogVerbose()
 
   if($VerbosePreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date) -gt $env:PSSimpleLogExpires
+    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
     if($Expired -or (-not $env:PSSimpleLogLogfile))
     {
       Initialize-Log
@@ -344,7 +344,7 @@ function Write-LogInformation()
 
   if($InformationPreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date) -gt $env:PSSimpleLogExpires
+    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
     if($Expired -or (-not $env:PSSimpleLogLogfile))
     {
       Initialize-Log
@@ -398,7 +398,7 @@ function Write-LogWarning()
 
   if($WarningPreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date) -gt $env:PSSimpleLogExpires
+    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
     if($Expired -or (-not $env:PSSimpleLogLogfile))
     {
       Initialize-Log
@@ -452,7 +452,7 @@ function Write-LogError()
 
   if($ErrorActionPreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date) -gt $env:PSSimpleLogExpires
+    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
     if($Expired -or (-not $env:PSSimpleLogLogfile))
     {
       Initialize-Log
