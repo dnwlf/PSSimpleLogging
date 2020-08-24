@@ -112,7 +112,7 @@ function Initialize-Log()
   if($env:PSSimpleLogMaxCount -gt 0)
   {
     $LogHistory = Get-ChildItem -Path $LogDir `
-     | Where {($_.Extension -eq ".log") -and ($_.Name -match "^$env:PSSimpleLogBaseName\.")}
+     | Where-Object {($_.Extension -eq ".log") -and ($_.Name -match "^$env:PSSimpleLogBaseName\.")}
   
     Write-Verbose ("[PSSimpleLogging] Log file count: {0}" -f $LogHistory.Count)
 
@@ -123,8 +123,8 @@ function Initialize-Log()
       Write-Verbose ("[PSSimpleLogging] Log files to remove: {0}" -f $RemoveLogsCount)
 
       Get-ChildItem -Path $LogDir `
-        | Where {($_.Extension -eq ".log") -and ($_.Name -match "^$env:PSSimpleLogBaseName\.")} `
-        | Sort CreationTime | Select -First $RemoveLogsCount `
+        | Where-Object {($_.Extension -eq ".log") -and ($_.Name -match "^$env:PSSimpleLogBaseName\.")} `
+        | Sort-Object CreationTime | Select-Object -First $RemoveLogsCount `
         | Remove-Item -Force
  
       Write-Verbose ("[PSSimpleLogging] Removed oldest {0} log files." -f $RemoveLogsCount)
