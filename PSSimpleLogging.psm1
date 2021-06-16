@@ -68,7 +68,7 @@ function Initialize-Log()
     "Month"
     {
       $DateFormat = "yyyyMM"
-      $env:PSSimpleLogExpires = ((Get-Date -Day 01 -Hour 00 -Minute 00 -Second 00 -Millisecond 00).AddMonths(1).ToUniversalTime().ToString('o'))
+      $env:PSSimpleLogExpires = ((Get-Date -Day 01 -Hour 00 -Minute 00 -Second 00 -Millisecond 00).AddMonths(1).ToUniversalTime().ToString('s'))
     }
 
     "Week"
@@ -77,25 +77,25 @@ function Initialize-Log()
 
       $Week = Get-Date
       While($Week.DayOfWeek -ne "Sunday"){$Week = $Week.AddDays(1)}
-      $env:PSSimpleLogExpires = ($Week).Date.ToUniversalTime().ToString('o')
+      $env:PSSimpleLogExpires = ($Week).Date.ToUniversalTime().ToString('s')
     }
 
     "Day"
     {
       $DateFormat = "yyyyMMdd"
-      $env:PSSimpleLogExpires = ((Get-Date -Hour 00 -Minute 00 -Second 00 -Millisecond 00).AddDays(1).ToUniversalTime().ToString('o'))
+      $env:PSSimpleLogExpires = ((Get-Date -Hour 00 -Minute 00 -Second 00 -Millisecond 00).AddDays(1).ToUniversalTime().ToString('s'))
     }
 
     "Hour"
     {
       $DateFormat = "yyyyMMdd.HH"
-      $env:PSSimpleLogExpires = ((Get-Date -Minute 00 -Second 00 -Millisecond 00).AddHours(1).ToUniversalTime().ToString('o'))
+      $env:PSSimpleLogExpires = ((Get-Date -Minute 00 -Second 00 -Millisecond 00).AddHours(1).ToUniversalTime().ToString('s'))
     }
 
     "Minute"
     {
       $DateFormat = "yyyyMMdd.HHmm"
-      $env:PSSimpleLogExpires = ((Get-Date -Second 00 -Millisecond 00).AddMinutes(1).ToUniversalTime().ToString('o'))
+      $env:PSSimpleLogExpires = ((Get-Date -Second 00 -Millisecond 00).AddMinutes(1).ToUniversalTime().ToString('s'))
     }
   }
 
@@ -140,6 +140,55 @@ function Initialize-Log()
   }
 }
 
+function Update-LogFilePath()
+{
+  <#
+  .SYNOPSIS
+    Initialize or re-initialize log if rollover date is passed-due, or if log
+    file does not exist
+
+  .PARAMETER LogFile
+    Required. Path of the log file
+
+  .PARAMETER Expires
+    Required. The date the log expires, in UTC, round trip format
+
+  .OUTPUTS
+    Returns the current UTC date
+
+  .EXAMPLE
+    Update-LogFilePath -LogFile $env:PSSimpleLogLogfile -Expires $env:PSSimpleLogExpires
+  #>
+
+  [CmdletBinding()]
+  Param(
+    [string]$LogFile = ([environment]::GetEnvironmentVariable("PSSimpleLogLogfile","Process")),
+    [string]$Expires = ([environment]::GetEnvironmentVariable("PSSimpleLogExpires","Process"))
+  )
+  Write-Debug "LogFile: $LogFile"
+  Write-Debug "Expires: $Expires"
+
+  [datetime]$NowUTC = (Get-Date).ToUniversalTime()
+
+  [bool]$Expired = $NowUTC -gt ($Expires -as [datetime])
+  Write-Debug "Expired: $Expired"
+
+  if($Expired -or (-not $LogFile))
+  {
+    Initialize-Log
+  }
+  else
+  {
+    if(-not (Test-Path -Path $LogFile))
+    {
+      Write-Debug "LogFile path does not exist."
+      Initialize-Log
+    }
+  }
+
+  Return $NowUTC
+}
+
 function Write-LogHost()
 {
   <#
@@ -173,21 +222,7 @@ function Write-LogHost()
     [string]$ForegroundColor
   )
 
-  [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
-
-  if($Expired -or (-not $env:PSSimpleLogLogfile))
-  {
-    Initialize-Log
-  }
-  else
-  {
-    if(-not (Test-Path -Path $env:PSSimpleLogLogfile))
-    {
-      Initialize-Log
-    }
-  }
-
-  $EntryTimestamp = (Get-Date -Format s)
+  [string]$EntryTimestamp = (Update-LogFilePath -LogFile $env:PSSimpleLogLogfile -Expires $env:PSSimpleLogExpires).ToString('s')
   Write-Log -LogFile $env:PSSimpleLogLogfile -Timestamp $EntryTimestamp -Level "DEFAULT" -Message $Message
 
   if($ForegroundColor)
@@ -234,20 +269,7 @@ function Write-LogDebug()
 
   if($DebugPreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
-    if($Expired -or (-not $env:PSSimpleLogLogfile))
-    {
-      Initialize-Log
-    }
-    else
-    {
-      if(-not (Test-Path -Path $env:PSSimpleLogLogfile))
-      {
-        Initialize-Log
-      }
-    }
-
-    $EntryTimestamp = (Get-Date -Format s)
+    [string]$EntryTimestamp = (Update-LogFilePath -LogFile $env:PSSimpleLogLogfile -Expires $env:PSSimpleLogExpires).ToString('s')
     Write-Log -LogFile $env:PSSimpleLogLogfile -Timestamp $EntryTimestamp -Level "DEBUG" -Message $Message
   }
 
@@ -288,20 +310,7 @@ function Write-LogVerbose()
 
   if($VerbosePreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
-    if($Expired -or (-not $env:PSSimpleLogLogfile))
-    {
-      Initialize-Log
-    }
-    else
-    {
-      if(-not (Test-Path -Path $env:PSSimpleLogLogfile))
-      {
-        Initialize-Log
-      }
-    }
-
-    $EntryTimestamp = (Get-Date -Format s)
+    [string]$EntryTimestamp = (Update-LogFilePath -LogFile $env:PSSimpleLogLogfile -Expires $env:PSSimpleLogExpires).ToString('s')
     Write-Log -LogFile $env:PSSimpleLogLogfile -Timestamp $EntryTimestamp -Level "VERBOSE" -Message $Message
   }
 
@@ -344,20 +353,7 @@ function Write-LogInformation()
 
   if($InformationPreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
-    if($Expired -or (-not $env:PSSimpleLogLogfile))
-    {
-      Initialize-Log
-    }
-    else
-    {
-      if(-not (Test-Path -Path $env:PSSimpleLogLogfile))
-      {
-        Initialize-Log
-      }
-    }
-
-    $EntryTimestamp = (Get-Date -Format s)
+    [string]$EntryTimestamp = (Update-LogFilePath -LogFile $env:PSSimpleLogLogfile -Expires $env:PSSimpleLogExpires).ToString('s')
     Write-Log -LogFile $env:PSSimpleLogLogfile -Timestamp $EntryTimestamp -Level "INFORMATION" -Message $Message
   }
 
@@ -398,20 +394,7 @@ function Write-LogWarning()
 
   if($WarningPreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
-    if($Expired -or (-not $env:PSSimpleLogLogfile))
-    {
-      Initialize-Log
-    }
-    else
-    {
-      if(-not (Test-Path -Path $env:PSSimpleLogLogfile))
-      {
-        Initialize-Log
-      }
-    }
-
-    $EntryTimestamp = (Get-Date -Format s)
+    [string]$EntryTimestamp = (Update-LogFilePath -LogFile $env:PSSimpleLogLogfile -Expires $env:PSSimpleLogExpires).ToString('s')
     Write-Log -LogFile $env:PSSimpleLogLogfile -Timestamp $EntryTimestamp -Level "WARNING" -Message $Message
   }
 
@@ -452,20 +435,7 @@ function Write-LogError()
 
   if($ErrorActionPreference -ne "SilentlyContinue")
   {
-    [bool]$Expired = (Get-Date).ToUniversalTime().ToString('o') -gt $env:PSSimpleLogExpires
-    if($Expired -or (-not $env:PSSimpleLogLogfile))
-    {
-      Initialize-Log
-    }
-    else
-    {
-      if(-not (Test-Path -Path $env:PSSimpleLogLogfile))
-      {
-        Initialize-Log
-      }
-    }
-
-    $EntryTimestamp = (Get-Date -Format s)
+    [string]$EntryTimestamp = (Update-LogFilePath -LogFile $env:PSSimpleLogLogfile -Expires $env:PSSimpleLogExpires).ToString('s')
     Write-Log -LogFile $env:PSSimpleLogLogfile -Timestamp $EntryTimestamp -Level "ERROR" -Message $Message
   }
 
