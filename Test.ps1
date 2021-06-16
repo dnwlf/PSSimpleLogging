@@ -1,13 +1,13 @@
 ﻿#Change these to "SilentlyContinue" to mute the console and log output for that type
-$DebugPreference = "Continue"
-$VerbosePreference = "Continue"
-$InformationPreference = "Continue"
-$WarningPreference = "Continue"
+$DebugPreference = "SilentlyContinue"
+$VerbosePreference = "SilentlyContinue"
+$InformationPreference = "SilentlyContinue"
+$WarningPreference = "SilentlyContinue"
 $ErrorActionPreference = "Continue"
 
-Import-Module -Name PSSimpleLogging.psd1 -Force
+Import-Module -Name ./PSSimpleLogging.psd1 -Force
 
-Initialize-Log -Directory $PSScriptRoot -BaseName MyLog -Rollover Minute -MaxCount 0
+Initialize-Log -Directory $PSScriptRoot -BaseName MyLog -Rollover Minute -MaxCount 1
 
 $Message = "Message to log."
 
@@ -19,7 +19,9 @@ while($true)
   Write-LogDebug $Message
   Write-LogVerbose $Message
   Write-LogInformation $Message
-  #Write-LogWarning $Message
+  Write-LogWarning $Message
   #Write-LogError $Message
   #Try { Throw "Here's an error." } Catch { Write-LogException $_ }
+
+  Start-Sleep -Seconds 5
 }
